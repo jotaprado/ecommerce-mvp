@@ -6,6 +6,7 @@ import { processPayment } from "../lib/payment";
 import type { PaymentResult } from "../lib/payment";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "../config/checkout";
 import { validateCheckoutInput } from "../lib/checkoutValidation";
+import { GENERIC_ERROR_MESSAGE, errorBody } from "../lib/apiError";
 
 const VALID_STATUSES: OrderStatus[] = ["pending", "paid", "shipped", "delivered"];
 
@@ -203,7 +204,7 @@ export async function checkout(req: Request, res: Response) {
     }
     // Nunca se loguea req.body: contiene datos de pago.
     console.error("Error en checkout:", error);
-    res.status(500).json({ error: "Error al procesar la orden" });
+    res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }
 
@@ -224,7 +225,7 @@ export async function listOrders(req: Request, res: Response) {
     res.json(orders);
   } catch (error) {
     console.error("Error en listOrders:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }
 
@@ -249,7 +250,7 @@ export async function getOrderById(req: Request, res: Response) {
     res.json(order);
   } catch (error) {
     console.error("Error en getOrderById:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }
 
@@ -283,6 +284,6 @@ export async function updateOrderStatus(req: Request, res: Response) {
     res.json(updated);
   } catch (error) {
     console.error("Error en updateOrderStatus:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { Prisma, Role } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { wouldLeaveNoActiveAdmin } from "../lib/adminRules";
+import { GENERIC_ERROR_MESSAGE, errorBody } from "../lib/apiError";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ROLES: Role[] = ["customer", "support", "admin"];
@@ -43,7 +44,7 @@ function handleError(res: Response, context: string, error: unknown) {
     return res.status(error.status).json({ error: error.message });
   }
   console.error(`Error en ${context}:`, error);
-  return res.status(500).json({ error: "Error interno del servidor" });
+  return res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
 }
 
 export async function listUsers(req: Request, res: Response) {

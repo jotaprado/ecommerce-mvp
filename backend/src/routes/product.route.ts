@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { requireRole } from "../middleware/requireRole";
+import { asyncHandler } from "../lib/asyncHandler";
 import {
   createProduct,
   deleteProduct,
@@ -11,8 +12,8 @@ import {
 
 export const productRouter = Router();
 
-productRouter.get("/", listProducts);
-productRouter.get("/:id", getProductById);
-productRouter.post("/", authMiddleware, requireRole("admin"), createProduct);
-productRouter.put("/:id", authMiddleware, requireRole("admin"), updateProduct);
-productRouter.delete("/:id", authMiddleware, requireRole("admin"), deleteProduct);
+productRouter.get("/", asyncHandler(listProducts));
+productRouter.get("/:id", asyncHandler(getProductById));
+productRouter.post("/", authMiddleware, requireRole("admin"), asyncHandler(createProduct));
+productRouter.put("/:id", authMiddleware, requireRole("admin"), asyncHandler(updateProduct));
+productRouter.delete("/:id", authMiddleware, requireRole("admin"), asyncHandler(deleteProduct));

@@ -9,8 +9,12 @@ import { orderRouter } from "./routes/order.route";
 import { userRouter } from "./routes/user.route";
 import { adminRouter } from "./routes/admin.route";
 import { checkoutRouter } from "./routes/checkout.route";
+import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
+
+// Render (y Vercel) van detrás de un proxy: sin esto el rate limit vería una sola IP para todos.
+app.set("trust proxy", 1);
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
 const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -25,6 +29,9 @@ app.use("/api/orders", orderRouter);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/checkout", checkoutRouter);
+
+// Siempre al final: captura los errores que lleguen por next(error).
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Backend listening at http://localhost:${port}`);

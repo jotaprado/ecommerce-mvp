@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
+import { GENERIC_ERROR_MESSAGE, errorBody } from "../lib/apiError";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -45,7 +46,7 @@ export async function register(req: Request, res: Response) {
     res.status(201).json({ token });
   } catch (error) {
     console.error("Error en register:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }
 
@@ -77,6 +78,6 @@ export async function login(req: Request, res: Response) {
     res.json({ token });
   } catch (error) {
     console.error("Error en login:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }

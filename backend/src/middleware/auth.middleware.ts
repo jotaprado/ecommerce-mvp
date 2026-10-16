@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
+import { GENERIC_ERROR_MESSAGE, errorBody } from "../lib/apiError";
 
 export interface AuthUser {
   id: string;
@@ -51,6 +52,6 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     next();
   } catch (error) {
     console.error("Error en authMiddleware:", error);
-    return res.status(500).json({ error: "Error interno del servidor" });
+    return res.status(500).json(errorBody(GENERIC_ERROR_MESSAGE));
   }
 }
