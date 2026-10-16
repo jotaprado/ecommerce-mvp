@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AUTH_NOTICE_KEY, saveToken } from "../lib/auth";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
@@ -24,6 +24,7 @@ function Login() {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
 
   async function handleSubmit(e: FormEvent) {
@@ -49,7 +50,9 @@ function Login() {
 
       notifyCartUpdated();
       toast.success("Sesión iniciada");
-      navigate("/");
+      // Vuelve a la página que quería el usuario (solo rutas internas).
+      const next = searchParams.get("next");
+      navigate(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error al iniciar sesión";
       setError(message);

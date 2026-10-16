@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { ClipboardList } from "lucide-react";
 import { apiFetch } from "../../lib/api";
 import { formatDate, formatPrice } from "../../lib/format";
+import { deliveryLabel, paymentLabel } from "../../lib/checkout";
+import Badge from "../../components/ui/Badge";
 import PanelNav from "../../components/PanelNav";
 import Card from "../../components/ui/Card";
 import EmptyState from "../../components/ui/EmptyState";
@@ -18,6 +20,8 @@ interface Order {
   total: string;
   status: string;
   createdAt: string;
+  deliveryType: string | null;
+  payment: { method: string | null; status: string; cardBrand: string | null; cardLast4: string | null } | null;
   user?: { email: string };
 }
 
@@ -87,6 +91,8 @@ function Panel() {
                 <th scope="col" className="px-4 py-3 font-semibold">Cliente</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Tracking ID</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Fecha</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Entrega</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Pago</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Total</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Estado</th>
               </tr>
@@ -101,6 +107,12 @@ function Panel() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="neutral">{deliveryLabel(order.deliveryType)}</Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant="neutral">{paymentLabel(order.payment, order.deliveryType)}</Badge>
+                  </td>
                   <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">
                     <Select

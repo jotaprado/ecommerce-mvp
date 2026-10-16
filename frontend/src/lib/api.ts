@@ -1,5 +1,14 @@
 import { AUTH_NOTICE_KEY, clearToken, getToken } from "./auth";
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api";
 
 export async function apiFetch(path: string, options?: RequestInit) {
@@ -32,7 +41,7 @@ export async function apiFetch(path: string, options?: RequestInit) {
   }
 
   if (!res.ok) {
-    throw new Error(data?.error ?? `Request failed: ${res.status}`);
+    throw new ApiError(data?.error ?? `Request failed: ${res.status}`, res.status);
   }
 
   return data;

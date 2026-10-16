@@ -8,6 +8,7 @@ import { cartRouter } from "./routes/cart.route";
 import { orderRouter } from "./routes/order.route";
 import { userRouter } from "./routes/user.route";
 import { adminRouter } from "./routes/admin.route";
+import { checkoutRouter } from "./routes/checkout.route";
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -23,6 +24,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/checkout", checkoutRouter);
 
 app.listen(port, () => {
   console.log(`Backend listening at http://localhost:${port}`);

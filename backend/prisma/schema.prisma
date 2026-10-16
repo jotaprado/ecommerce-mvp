@@ -13,6 +13,11 @@ enum Role {
   admin
 }
 
+enum DeliveryType {
+  shipping
+  pickup
+}
+
 enum OrderStatus {
   pending
   paid
@@ -66,6 +71,12 @@ model Order {
   createdAt  DateTime    @default(now())
   items      OrderItem[]
   payment    Payment?
+
+  // total = subtotal + shippingCost. Los pedidos antiguos tienen envío 0 y entrega nula.
+  deliveryType    DeliveryType?
+  shippingAddress Json?
+  pickupStore     String?
+  shippingCost    Decimal       @default(0)
 }
 
 model OrderItem {
@@ -85,4 +96,24 @@ model Payment {
   gatewayReference  String
   status            String
   amount            Decimal
+
+  // Solo marca y últimos 4 dígitos: nunca el número completo ni el CVV.
+  method    String?
+  cardBrand String?
+  cardLast4 String?
+}
+
+// Registro de cada intento procesado por processPayment (aprobado o rechazado).
+// orderId sin FK: un intento rechazado no tiene orden.
+model PaymentAttempt {
+  id        String   @id @default(uuid())
+  userId    String
+  orderId   String?
+  method    String
+  amount    Decimal
+  status    String
+  reason    String?
+  cardBrand String?
+  cardLast4 String?
+  createdAt DateTime @default(now())
 }

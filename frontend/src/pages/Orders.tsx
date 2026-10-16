@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { ChevronRight, ClipboardList } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { formatDate, formatPrice } from "../lib/format";
+import { deliveryLabel, paymentLabel } from "../lib/checkout";
+import Badge from "../components/ui/Badge";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import { buttonClasses } from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -15,6 +17,8 @@ interface Order {
   total: string;
   status: string;
   createdAt: string;
+  deliveryType: string | null;
+  payment: { method: string | null; cardBrand: string | null; cardLast4: string | null } | null;
 }
 
 function Orders() {
@@ -67,6 +71,10 @@ function Orders() {
                 <div>
                   <p className="font-mono font-semibold">{order.trackingId}</p>
                   <p className="text-small text-muted">{formatDate(order.createdAt)}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Badge variant="neutral">{deliveryLabel(order.deliveryType)}</Badge>
+                    <Badge variant="neutral">{paymentLabel(order.payment, order.deliveryType)}</Badge>
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">

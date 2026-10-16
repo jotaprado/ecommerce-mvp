@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { saveToken } from "../lib/auth";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
@@ -16,6 +16,7 @@ function Register() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
 
   async function handleSubmit(e: FormEvent) {
@@ -41,7 +42,9 @@ function Register() {
 
       notifyCartUpdated();
       toast.success("Cuenta creada");
-      navigate("/");
+      // Vuelve a la página que quería el usuario (solo rutas internas).
+      const next = searchParams.get("next");
+      navigate(next && next.startsWith("/") && !next.startsWith("//") ? next : "/");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error al registrarse";
       setError(message);

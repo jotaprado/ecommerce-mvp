@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { CheckCircle2, PackageX } from "lucide-react";
+import { CheckCircle2, Clock, PackageX } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { formatPrice } from "../lib/format";
+import { deliveryLabel, paymentLabel } from "../lib/checkout";
 import ProductImage from "../components/ProductImage";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import { buttonClasses } from "../components/ui/Button";
@@ -24,6 +25,11 @@ interface Order {
   status: string;
   createdAt: string;
   items: OrderItem[];
+  deliveryType: string | null;
+  shippingAddress: { name: string; phone: string; department: string; city: string; address: string; notes?: string } | null;
+  pickupStore: string | null;
+  shippingCost: string;
+  payment: { method: string | null; status: string; cardBrand: string | null; cardLast4: string | null } | null;
 }
 
 function OrderConfirmation() {
@@ -65,13 +71,27 @@ function OrderConfirmation() {
     );
   }
 
+  const pendingPayment = order.status === "pending";
+  const shippingCost = Number(order.shippingCost ?? 0);
+  const subtotal = Number(order.total) - shippingCost;
+  const addr = order.shippingAddress;
+
   return (
     <div className="mx-auto max-w-2xl">
       <Card className="p-6">
         <div className="flex items-start gap-3">
-          <CheckCircle2 className="mt-1 h-8 w-8 shrink-0 text-success" aria-hidden="true" />
+          {pendingPayment ? (
+            <Clock className="mt-1 h-8 w-8 shrink-0 text-muted" aria-hidden="true" />
+          ) : (
+            <CheckCircle2 className="mt-1 h-8 w-8 shrink-0 text-success" aria-hidden="true" />
+          )}
           <div>
-            <h1 className="text-title text-success">¡Pedido confirmado!</h1>
+            <h1 className={`text-title ${pendingPayment ? "" : "text-success"}`}>
+              {pendingPayment ? "¡Pedido recibido!" : "¡Pedido confirmado!"}
+            </h1>
+            {pendingPayment && (
+              <p className="mt-1 text-small font-medium text-text-primary">Pendiente de pago</p>
+            )}
             <p className="mt-2 text-small text-muted">Número de seguimiento</p>
             <p className="font-mono text-heading">{order.trackingId}</p>
             <div className="mt-2">
@@ -100,10 +120,45 @@ function OrderConfirmation() {
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-          <span className="text-heading">Total pagado</span>
-          <span className="text-heading">{formatPrice(order.total)}</span>
-        </div>
+        <dl className="mt-4 space-y-2 border-t border-border pt-4 text-small">
+          <div className="flex justify-between">
+            <dt className="text-muted">Subtotal</dt>
+            <dd>{formatPrice(subtotal)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Envío</dt>
+            <dd>{order.deliveryType === "shipping" ? (shippingCost === 0 ? "Gratis" : formatPrice(shippingCost)) : order.deliveryType === "pickup" ? "$0" : "—"}</dd>
+          </div>
+          <div className="flex justify-between border-t border-border pt-3">
+            <dt className="text-heading">{pendingPayment ? "Total a pagar" : "Total pagado"}</dt>
+            <dd className="text-heading">{formatPrice(order.total)}</dd>
+          </div>
+        </dl>
+
+        <dl className="mt-4 border-t border-border pt-4 text-small">
+          <div className="grid grid-cols-3 gap-2 py-2">
+            <dt className="text-muted">Entrega</dt>
+            <dd className="col-span-2">
+              {deliveryLabel(order.deliveryType)}
+              {order.deliveryType === "pickup" && order.pickupStore && <span> · {order.pickupStore}</span>}
+              {order.deliveryType === "shipping" && addr && (
+                <span className="block text-muted">
+                  {addr.name} · {addr.phone}
+                  <br />
+                  {addr.address}, {addr.city}, {addr.department}
+                  {addr.notes ? <><br />Indicaciones: {addr.notes}</> : null}
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="grid grid-cols-3 gap-2 py-2">
+            <dt className="text-muted">Pago</dt>
+            <dd className="col-span-2">
+              {paymentLabel(order.payment, order.deliveryType)}
+              {order.payment && <span className="text-muted"> · {order.payment.status === "approved" ? "Aprobado" : "Pendiente"}</span>}
+            </dd>
+          </div>
+        </dl>
 
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/" className={buttonClasses("primary")}>

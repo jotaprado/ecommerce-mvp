@@ -4,6 +4,8 @@ import { STORE_NAME } from "./config";
 import { ToastProvider } from "./components/ui/Toast";
 import Footer from "./components/Footer";
 import NotFound from "./pages/NotFound";
+import Checkout from "./pages/Checkout";
+import RequireAuth from "./components/RequireAuth";
 import NavBar from "./components/NavBar";
 import Catalog from "./pages/Catalog";
 import Login from "./pages/Login";
@@ -35,6 +37,14 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
+        <Route
+          path="/checkout"
+          element={
+            <RequireAuth>
+              <Checkout />
+            </RequireAuth>
+          }
+        />
         <Route path="/order/:id" element={<OrderConfirmation />} />
         <Route path="/orders" element={<Orders />} />
         <Route

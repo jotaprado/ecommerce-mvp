@@ -4,7 +4,8 @@ import { prisma } from "../lib/prisma";
 export async function getSummary(req: Request, res: Response) {
   const [salesAgg, orderCount, userCount] = await Promise.all([
     prisma.order.aggregate({
-      where: { status: { not: "pending" } },
+      // Solo pedidos con pago confirmado: un pedido pending (contra entrega) aún no es venta.
+      where: { status: { in: ["paid", "shipped", "delivered"] } },
       _sum: { total: true },
     }),
     // Cuenta todas las órdenes, incluidas las pendientes (a diferencia de totalSales).

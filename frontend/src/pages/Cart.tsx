@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { CreditCard, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-import { getCart, notifyCartUpdated, removeFromCart, updateCartQuantity } from "../lib/cart";
+import { getCart, removeFromCart, updateCartQuantity } from "../lib/cart";
 import type { CartLine } from "../lib/cart";
-import { apiFetch } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import ProductImage from "../components/ProductImage";
 import Button, { buttonClasses } from "../components/ui/Button";
@@ -15,9 +14,6 @@ import { useToast } from "../components/ui/Toast";
 function Cart() {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [checkingOut, setCheckingOut] = useState(false);
-  const navigate = useNavigate();
   const toast = useToast();
 
   function loadCart() {
@@ -47,22 +43,6 @@ function Cart() {
       loadCart();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo eliminar el producto");
-    }
-  }
-
-  async function handleCheckout() {
-    setCheckoutError(null);
-    setCheckingOut(true);
-
-    try {
-      const order = await apiFetch("/orders/checkout", { method: "POST" });
-      notifyCartUpdated();
-      navigate(`/order/${order.id}`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo completar el pago";
-      setCheckoutError(message);
-      toast.error(message);
-      setCheckingOut(false);
     }
   }
 
@@ -161,21 +141,10 @@ function Cart() {
             <span className="text-heading">{formatPrice(total)}</span>
           </div>
 
-          {checkoutError && (
-            <p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-small text-danger">
-              {checkoutError}
-            </p>
-          )}
-
-          <Button
-            variant="cta"
-            loading={checkingOut}
-            onClick={handleCheckout}
-            className="w-full"
-            icon={<CreditCard className="h-4 w-4" aria-hidden="true" />}
-          >
-            {checkingOut ? "Procesando..." : "Ir a pagar"}
-          </Button>
+          <Link to="/checkout" className={`${buttonClasses("cta")} w-full`}>
+            <CreditCard className="h-4 w-4" aria-hidden="true" />
+            Ir a pagar
+          </Link>
         </Card>
       </div>
     </div>
