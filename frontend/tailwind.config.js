@@ -16,8 +16,8 @@ export default {
         // Solo para acciones de compra (añadir al carrito, pagar). Texto oscuro: contraste AA.
         cta: {
           DEFAULT: "#FB923C",
-          hover: "#F97316",
-          active: "#EA580C",
+          hover: "#FDBA74",
+          active: "#F97316",
           text: "#0F172A",
         },
         // Tokens semánticos
