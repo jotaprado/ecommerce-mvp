@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
-import { PackageSearch, ShoppingCart } from "lucide-react";
+import { PackageSearch, Search, ShoppingCart, X } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { addToCart } from "../lib/cart";
 import { formatPrice } from "../lib/format";
@@ -11,7 +11,7 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
-import Input from "../components/ui/Input";
+import Input, { fieldClasses } from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Skeleton from "../components/ui/Skeleton";
 import { useToast } from "../components/ui/Toast";
@@ -35,6 +35,8 @@ interface Filters {
 
 const EMPTY_FILTERS: Filters = { category: "", brand: "", minPrice: "", maxPrice: "" };
 const LOW_STOCK_THRESHOLD = 5;
+const SEARCH_DEBOUNCE_MS = 400;
+const MIN_SEARCH_LENGTH = 2;
 
 function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -46,7 +48,17 @@ function Catalog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const toast = useToast();
+
+  // La búsqueda se envía al servidor ~400 ms después de dejar de escribir.
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const activeSearch = search.length >= MIN_SEARCH_LENGTH ? search : "";
 
   // Catálogo completo (sin filtros) solo para generar las categorías y marcas disponibles.
   useEffect(() => {
@@ -61,6 +73,7 @@ function Catalog() {
     if (filters.brand) params.set("brand", filters.brand);
     if (filters.minPrice) params.set("minPrice", filters.minPrice);
     if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+    if (activeSearch) params.set("search", activeSearch);
     params.set("take", "200");
 
     setLoading(true);
@@ -72,7 +85,7 @@ function Catalog() {
         setError(err instanceof Error ? err.message : "No se pudo cargar el catálogo");
       })
       .finally(() => setLoading(false));
-  }, [filters]);
+  }, [filters, activeSearch]);
 
   const categories = useMemo(
     () => Array.from(new Set(allProducts.map((p) => p.category))).sort(),
@@ -82,6 +95,16 @@ function Catalog() {
     () => Array.from(new Set(allProducts.map((p) => p.brand))).sort(),
     [allProducts],
   );
+
+  function clearSearch() {
+    setSearchInput("");
+    setSearch("");
+  }
+
+  function clearAll() {
+    setFilters(EMPTY_FILTERS);
+    clearSearch();
+  }
 
   function updateFilter(key: keyof Filters, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -108,6 +131,32 @@ function Catalog() {
           con seguimiento de tu pedido.
         </p>
       </section>
+
+      <div className="relative mb-4">
+        <label htmlFor="catalog-search" className="sr-only">
+          Buscar productos
+        </label>
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+        <input
+          id="catalog-search"
+          type="search"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Buscar por nombre, marca o descripción"
+          maxLength={100}
+          className={`${fieldClasses} !py-3 !pl-9 !pr-10 text-body [&::-webkit-search-cancel-button]:hidden`}
+        />
+        {searchInput && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            aria-label="Limpiar búsqueda"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted hover:bg-slate-100"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Categorías">
         <button
@@ -166,7 +215,7 @@ function Catalog() {
           onChange={(e) => updateFilter("maxPrice", e.target.value)}
         />
         <div className="col-span-2 md:col-span-2">
-          <Button variant="ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
+          <Button variant="ghost" onClick={clearAll}>
             Limpiar filtros
           </Button>
         </div>
@@ -195,10 +244,14 @@ function Catalog() {
       {!loading && !error && products.length === 0 && (
         <EmptyState
           icon={<PackageSearch className="h-6 w-6" />}
-          message="No se encontraron productos con esos filtros."
+          message={
+            activeSearch
+              ? `No encontramos productos para «${activeSearch}»`
+              : "No se encontraron productos con esos filtros."
+          }
           action={
-            <Button variant="primary" onClick={() => setFilters(EMPTY_FILTERS)}>
-              Limpiar filtros
+            <Button variant="primary" onClick={activeSearch ? clearSearch : clearAll}>
+              {activeSearch ? "Limpiar búsqueda" : "Limpiar filtros"}
             </Button>
           }
         />

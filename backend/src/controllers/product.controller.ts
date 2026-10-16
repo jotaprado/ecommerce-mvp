@@ -2,8 +2,37 @@ import { Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
+const MIN_SEARCH_LENGTH = 2;
+const MAX_SEARCH_LENGTH = 100;
+
+// Minúsculas y sin tildes (la ñ se trata como n): "Audífonos" y "audifonos" son lo mismo.
+function normalizeSearch(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+// IDs de productos cuyo nombre, marca o descripción contienen el texto, ignorando mayúsculas y tildes.
+// Se hace en SQL con translate() (sin extensiones ni migraciones); el texto va parametrizado.
+async function findIdsBySearch(term: string): Promise<string[]> {
+  const escaped = term.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const pattern = `%${escaped}%`;
+
+  const rows = await prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
+    SELECT id FROM "Product"
+    WHERE lower(translate(
+      name || ' ' || brand || ' ' || description,
+      'áéíóúüñÁÉÍÓÚÜÑ',
+      'aeiouunaeiouun'
+    )) LIKE ${pattern}
+  `);
+
+  return rows.map((row) => row.id);
+}
+
 export async function listProducts(req: Request, res: Response) {
-  const { category, brand, minPrice, maxPrice, take, skip } = req.query;
+  const { category, brand, minPrice, maxPrice, take, skip, search } = req.query;
 
   const where: Prisma.ProductWhereInput = {};
 
@@ -20,6 +49,18 @@ export async function listProducts(req: Request, res: Response) {
     }
     if (typeof maxPrice === "string") {
       where.price.lte = new Prisma.Decimal(maxPrice);
+    }
+  }
+
+  // Búsqueda por texto: se ignora si está vacía o tiene menos de 2 caracteres (tras recortar espacios).
+  if (typeof search === "string") {
+    const term = normalizeSearch(search.trim()).slice(0, MAX_SEARCH_LENGTH);
+    if (term.length >= MIN_SEARCH_LENGTH) {
+      const ids = await findIdsBySearch(term);
+      if (ids.length === 0) {
+        return res.json([]);
+      }
+      where.id = { in: ids };
     }
   }
 
