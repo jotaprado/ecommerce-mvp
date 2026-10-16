@@ -6,7 +6,7 @@ export type ButtonSize = "sm" | "md";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-accent-blue text-white hover:bg-accent-blue-hover active:bg-accent-blue-active",
-  cta: "bg-cta-green text-white hover:bg-cta-green-hover active:bg-cta-green-active",
+  cta: "bg-cta text-cta-text hover:bg-cta-hover active:bg-cta-hover",
   ghost: "bg-transparent text-accent-blue hover:bg-accent-blue-soft",
   danger: "bg-danger text-white hover:bg-red-700 active:bg-red-800",
 };

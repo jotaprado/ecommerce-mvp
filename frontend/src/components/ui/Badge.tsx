@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
 
-export type BadgeVariant = "neutral" | "info" | "success" | "warning" | "danger";
+export type BadgeVariant = "neutral" | "info" | "success" | "danger";
 
 const VARIANTS: Record<BadgeVariant, string> = {
   neutral: "bg-slate-100 text-slate-700",
   info: "bg-accent-blue-soft text-accent-blue-active",
-  success: "bg-emerald-50 text-emerald-800",
-  warning: "bg-amber-50 text-amber-800",
-  danger: "bg-red-50 text-red-700",
+  success: "bg-emerald-50 text-success",
+  danger: "bg-red-100 text-red-800",
 };
 
 interface BadgeProps {

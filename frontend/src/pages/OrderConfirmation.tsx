@@ -71,7 +71,7 @@ function OrderConfirmation() {
         <div className="flex items-start gap-3">
           <CheckCircle2 className="mt-1 h-8 w-8 shrink-0 text-success" aria-hidden="true" />
           <div>
-            <h1 className="text-title">¡Pedido confirmado!</h1>
+            <h1 className="text-title text-success">¡Pedido confirmado!</h1>
             <p className="mt-2 text-small text-muted">Número de seguimiento</p>
             <p className="font-mono text-heading">{order.trackingId}</p>
             <div className="mt-2">

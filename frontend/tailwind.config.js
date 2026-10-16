@@ -13,18 +13,18 @@ export default {
           active: "#1E40AF",
           soft: "#EFF6FF",
         },
-        // Solo para acciones de compra (añadir al carrito, pagar)
-        "cta-green": {
-          DEFAULT: "#10B981",
-          hover: "#059669",
-          active: "#047857",
+        // Solo para acciones de compra (añadir al carrito, pagar). Texto oscuro: contraste AA.
+        cta: {
+          DEFAULT: "#F97316",
+          hover: "#EA580C",
+          text: "#0F172A",
         },
         // Tokens semánticos
         surface: "#FFFFFF",
         muted: "#64748B",
         border: "#E2E8F0",
         danger: "#DC2626",
-        success: "#059669",
+        success: "#047857",
         warning: "#D97706",
       },
       fontFamily: {
