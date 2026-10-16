@@ -5,14 +5,13 @@ import { apiFetch } from "../../lib/api";
 import { formatDate, formatPrice } from "../../lib/format";
 import { deliveryLabel, paymentLabel } from "../../lib/checkout";
 import Badge from "../../components/ui/Badge";
+import { ORDER_STATUSES, orderStatusLabel } from "../../lib/orderStatus";
 import PanelNav from "../../components/PanelNav";
 import Card from "../../components/ui/Card";
 import EmptyState from "../../components/ui/EmptyState";
 import Select from "../../components/ui/Select";
 import Skeleton from "../../components/ui/Skeleton";
 import { useToast } from "../../components/ui/Toast";
-
-const STATUSES = ["pending", "paid", "shipped", "delivered"];
 
 interface Order {
   id: string;
@@ -101,7 +100,7 @@ function Panel() {
               {orders.map((order) => (
                 <tr key={order.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">{order.user?.email ?? "—"}</td>
-                  <td className="px-4 py-3 font-mono">
+                  <td className="whitespace-nowrap px-4 py-3 font-mono">
                     <Link to={`/order/${order.id}`} className="text-accent-blue hover:underline">
                       {order.trackingId ?? order.id.slice(0, 8)}
                     </Link>
@@ -117,13 +116,14 @@ function Panel() {
                   <td className="px-4 py-3">
                     <Select
                       aria-label={`Estado del pedido ${order.trackingId ?? order.id}`}
+                      className="min-w-[11rem]"
                       value={order.status}
                       disabled={updatingId === order.id}
                       onChange={(e) => handleStatusChange(order.id, e.target.value)}
                     >
-                      {STATUSES.map((status) => (
+                      {ORDER_STATUSES.map((status) => (
                         <option key={status} value={status}>
-                          {status}
+                          {orderStatusLabel(status)}
                         </option>
                       ))}
                     </Select>

@@ -1,16 +1,16 @@
 import Badge from "./ui/Badge";
 import type { BadgeVariant } from "./ui/Badge";
+import { orderStatusLabel } from "../lib/orderStatus";
 
-const STATUS: Record<string, { label: string; variant: BadgeVariant }> = {
-  pending: { label: "Pendiente", variant: "neutral" },
-  paid: { label: "Pagado", variant: "success" },
-  shipped: { label: "Enviado", variant: "info" },
-  delivered: { label: "Entregado", variant: "success" },
+const VARIANTS: Record<string, BadgeVariant> = {
+  pending: "neutral",
+  paid: "success",
+  shipped: "info",
+  delivered: "success",
 };
 
 function OrderStatusBadge({ status }: { status: string }) {
-  const entry = STATUS[status] ?? { label: status, variant: "neutral" as BadgeVariant };
-  return <Badge variant={entry.variant}>{entry.label}</Badge>;
+  return <Badge variant={VARIANTS[status] ?? "neutral"}>{orderStatusLabel(status)}</Badge>;
 }
 
 export default OrderStatusBadge;

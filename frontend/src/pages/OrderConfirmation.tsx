@@ -4,6 +4,7 @@ import { CheckCircle2, Clock, PackageX } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { formatPrice } from "../lib/format";
 import { deliveryLabel, paymentLabel } from "../lib/checkout";
+import { orderStatusLabel, paymentStatusLabel } from "../lib/orderStatus";
 import ProductImage from "../components/ProductImage";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import { buttonClasses } from "../components/ui/Button";
@@ -90,7 +91,7 @@ function OrderConfirmation() {
               {pendingPayment ? "¡Pedido recibido!" : "¡Pedido confirmado!"}
             </h1>
             {pendingPayment && (
-              <p className="mt-1 text-small font-medium text-text-primary">Pendiente de pago</p>
+              <p className="mt-1 text-small font-medium text-text-primary">{orderStatusLabel(order.status)}</p>
             )}
             <p className="mt-2 text-small text-muted">Número de seguimiento</p>
             <p className="font-mono text-heading">{order.trackingId}</p>
@@ -155,7 +156,7 @@ function OrderConfirmation() {
             <dt className="text-muted">Pago</dt>
             <dd className="col-span-2">
               {paymentLabel(order.payment, order.deliveryType)}
-              {order.payment && <span className="text-muted"> · {order.payment.status === "approved" ? "Aprobado" : "Pendiente"}</span>}
+              {order.payment && <span className="text-muted"> · {paymentStatusLabel(order.payment.status)}</span>}
             </dd>
           </div>
         </dl>

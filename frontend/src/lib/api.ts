@@ -41,7 +41,7 @@ export async function apiFetch(path: string, options?: RequestInit) {
   }
 
   if (!res.ok) {
-    throw new ApiError(data?.error ?? `Request failed: ${res.status}`, res.status);
+    throw new ApiError(data?.error ?? `Error en la solicitud (código ${res.status})`, res.status);
   }
 
   return data;
