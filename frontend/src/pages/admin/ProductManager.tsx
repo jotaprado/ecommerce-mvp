@@ -111,7 +111,7 @@ function ProductManager() {
       brand: form.brand,
       category: form.category,
       stock: Number(form.stock),
-      imageUrl: form.imageUrl,
+      imageUrl: form.imageUrl.trim(),
       specs,
     };
 
@@ -173,7 +173,7 @@ function ProductManager() {
           <Input label="Nombre" required value={form.name} onChange={(e) => updateField("name", e.target.value)} />
           <Input label="Marca" required value={form.brand} onChange={(e) => updateField("brand", e.target.value)} />
           <Input label="Categoría" required value={form.category} onChange={(e) => updateField("category", e.target.value)} />
-          <Input label="Imagen (URL)" required value={form.imageUrl} onChange={(e) => updateField("imageUrl", e.target.value)} />
+          <Input label="Imagen (URL, opcional)" value={form.imageUrl} onChange={(e) => updateField("imageUrl", e.target.value)} />
           <Input label="Precio" type="number" required min="0" value={form.price} onChange={(e) => updateField("price", e.target.value)} />
           <Input label="Stock" type="number" required min="0" value={form.stock} onChange={(e) => updateField("stock", e.target.value)} />
           <Input

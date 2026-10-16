@@ -107,10 +107,10 @@ function Panel() {
                   </td>
                   <td className="px-4 py-3">{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <Badge variant="neutral">{deliveryLabel(order.deliveryType)}</Badge>
+                    <Badge variant="neutral" className="whitespace-nowrap">{deliveryLabel(order.deliveryType)}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant="neutral">{paymentLabel(order.payment, order.deliveryType)}</Badge>
+                    <Badge variant="neutral" className="whitespace-nowrap">{paymentLabel(order.payment, order.deliveryType)}</Badge>
                   </td>
                   <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">

@@ -98,8 +98,8 @@ function isValidProductInput(body: Record<string, unknown>): boolean {
     category.length > 0 &&
     typeof stock === "number" &&
     stock >= 0 &&
-    typeof imageUrl === "string" &&
-    imageUrl.length > 0
+    // La imagen es opcional: si falta o viene vacía se guarda "" y la tienda muestra el respaldo por categoría.
+    (imageUrl === undefined || imageUrl === null || typeof imageUrl === "string")
   );
 }
 
@@ -111,7 +111,16 @@ export async function createProduct(req: Request, res: Response) {
   const { name, description, price, brand, category, specs, stock, imageUrl } = req.body;
 
   const product = await prisma.product.create({
-    data: { name, description, price, brand, category, specs: specs ?? {}, stock, imageUrl },
+    data: {
+      name,
+      description,
+      price,
+      brand,
+      category,
+      specs: specs ?? {},
+      stock,
+      imageUrl: typeof imageUrl === "string" ? imageUrl.trim() : "",
+    },
   });
 
   res.status(201).json(product);
@@ -135,7 +144,9 @@ export async function updateProduct(req: Request, res: Response) {
   if (typeof category === "string" && category.length > 0) data.category = category;
   if (specs !== undefined) data.specs = specs;
   if (typeof stock === "number" && stock >= 0) data.stock = stock;
-  if (typeof imageUrl === "string" && imageUrl.length > 0) data.imageUrl = imageUrl;
+  // Un valor vacío (o null) quita la imagen; si no viene el campo, se conserva la actual.
+  if (typeof imageUrl === "string") data.imageUrl = imageUrl.trim();
+  else if (imageUrl === null) data.imageUrl = "";
 
   const updated = await prisma.product.update({ where: { id }, data });
   res.json(updated);
