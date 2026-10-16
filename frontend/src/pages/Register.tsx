@@ -4,6 +4,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { saveToken } from "../lib/auth";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
+import { notifyCartUpdated } from "../lib/cart";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import { useToast } from "../components/ui/Toast";
 
 function Register() {
   const [email, setEmail] = useState("");
@@ -11,6 +16,7 @@ function Register() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -33,62 +39,60 @@ function Register() {
         clearGuestCart();
       }
 
+      notifyCartUpdated();
+      toast.success("Cuenta creada");
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al registrarse");
+      const message = err instanceof Error ? err.message : "Error al registrarse";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-neutral px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white rounded-lg shadow p-6 space-y-4"
-      >
-        <h1 className="text-2xl font-semibold text-text-primary">Crear cuenta</h1>
+    <div className="mx-auto max-w-sm py-8">
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <h1 className="text-title">Crear cuenta</h1>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && (
+            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-small text-danger">
+              {error}
+            </p>
+          )}
 
-        <div>
-          <label className="block text-sm text-text-primary mb-1">Email</label>
-          <input
+          <Input
+            label="Email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm text-text-primary mb-1">Password</label>
-          <input
+          <Input
+            label="Contraseña (mínimo 8 caracteres)"
             type="password"
             required
             minLength={8}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2"
           />
-        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-cta-green text-white rounded px-3 py-2 font-medium disabled:opacity-60"
-        >
-          {loading ? "Creando cuenta..." : "Registrarme"}
-        </button>
+          <Button type="submit" loading={loading} className="w-full">
+            {loading ? "Creando cuenta..." : "Registrarme"}
+          </Button>
 
-        <p className="text-sm text-text-primary text-center">
-          ¿Ya tienes cuenta?{" "}
-          <Link to="/login" className="text-accent-blue">
-            Inicia sesión
-          </Link>
-        </p>
-      </form>
+          <p className="text-center text-small text-muted">
+            ¿Ya tienes cuenta?{" "}
+            <Link to="/login" className="font-medium text-accent-blue hover:underline">
+              Inicia sesión
+            </Link>
+          </p>
+        </form>
+      </Card>
     </div>
   );
 }

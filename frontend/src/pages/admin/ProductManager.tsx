@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../lib/api";
+import { Package } from "lucide-react";
+import { formatPrice } from "../../lib/format";
 import PanelNav from "../../components/PanelNav";
+import ProductImage from "../../components/ProductImage";
+import Button from "../../components/ui/Button";
+import Card from "../../components/ui/Card";
+import EmptyState from "../../components/ui/EmptyState";
+import Input, { fieldClasses } from "../../components/ui/Input";
+import Skeleton from "../../components/ui/Skeleton";
+import { useToast } from "../../components/ui/Toast";
 
 interface Product {
   id: string;
@@ -37,14 +46,6 @@ const EMPTY_FORM: FormState = {
   specs: "{}",
 };
 
-function formatPrice(price: string) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
-}
-
 function ProductManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +53,13 @@ function ProductManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
 
   function loadProducts() {
     setLoading(true);
     apiFetch("/products?take=200")
       .then(setProducts)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los productos"))
       .finally(() => setLoading(false));
   }
 
@@ -125,10 +128,13 @@ function ProductManager() {
           body: JSON.stringify(payload),
         });
       }
+      toast.success(editingId ? "Producto actualizado" : "Producto creado");
       cancelEdit();
       loadProducts();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar el producto");
+      const message = err instanceof Error ? err.message : "No se pudo guardar el producto";
+      setError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -140,149 +146,128 @@ function ProductManager() {
     setError(null);
     try {
       await apiFetch(`/products/${product.id}`, { method: "DELETE" });
+      toast.success("Producto eliminado");
       loadProducts();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo eliminar el producto");
+      const message = err instanceof Error ? err.message : "No se pudo eliminar el producto";
+      setError(message);
+      toast.error(message);
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg-neutral px-4 py-6">
-      <h1 className="text-2xl font-semibold text-text-primary mb-4">Panel de administración</h1>
+    <div>
+      <h1 className="mb-4 text-title">Panel de administración</h1>
       <PanelNav />
 
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <h2 className="text-lg font-semibold text-text-primary mb-3">
-          {editingId ? "Editar producto" : "Crear producto"}
-        </h2>
+      <Card className="mb-6 p-5">
+        <h2 className="mb-3 text-heading">{editingId ? "Editar producto" : "Crear producto"}</h2>
 
-        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+        {error && (
+          <p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-small text-danger">
+            {error}
+          </p>
+        )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <input
-            placeholder="Nombre"
-            required
-            value={form.name}
-            onChange={(e) => updateField("name", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-          <input
-            placeholder="Marca"
-            required
-            value={form.brand}
-            onChange={(e) => updateField("brand", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-          <input
-            placeholder="Categoría"
-            required
-            value={form.category}
-            onChange={(e) => updateField("category", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-          <input
-            placeholder="Imagen (URL)"
-            required
-            value={form.imageUrl}
-            onChange={(e) => updateField("imageUrl", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-          <input
-            type="number"
-            placeholder="Precio"
-            required
-            min="0"
-            value={form.price}
-            onChange={(e) => updateField("price", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-          <input
-            type="number"
-            placeholder="Stock"
-            required
-            min="0"
-            value={form.stock}
-            onChange={(e) => updateField("stock", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-          <input
-            placeholder="Especificaciones (JSON opcional)"
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <Input label="Nombre" required value={form.name} onChange={(e) => updateField("name", e.target.value)} />
+          <Input label="Marca" required value={form.brand} onChange={(e) => updateField("brand", e.target.value)} />
+          <Input label="Categoría" required value={form.category} onChange={(e) => updateField("category", e.target.value)} />
+          <Input label="Imagen (URL)" required value={form.imageUrl} onChange={(e) => updateField("imageUrl", e.target.value)} />
+          <Input label="Precio" type="number" required min="0" value={form.price} onChange={(e) => updateField("price", e.target.value)} />
+          <Input label="Stock" type="number" required min="0" value={form.stock} onChange={(e) => updateField("stock", e.target.value)} />
+          <Input
+            label="Especificaciones (JSON opcional)"
             value={form.specs}
             onChange={(e) => updateField("specs", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm md:col-span-2"
+            className="md:col-span-2"
           />
-          <textarea
-            placeholder="Descripción"
-            required
-            value={form.description}
-            onChange={(e) => updateField("description", e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm md:col-span-4"
-            rows={2}
-          />
+          <div className="md:col-span-4">
+            <label htmlFor="product-description" className="mb-1 block text-small font-medium">
+              Descripción
+            </label>
+            <textarea
+              id="product-description"
+              required
+              rows={2}
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              className={fieldClasses}
+            />
+          </div>
 
-          <div className="md:col-span-4 flex gap-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-cta-green text-white rounded px-4 py-2 text-sm font-medium disabled:opacity-60"
-            >
+          <div className="flex gap-2 md:col-span-4">
+            <Button type="submit" variant="primary" loading={saving}>
               {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Crear producto"}
-            </button>
+            </Button>
             {editingId && (
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="text-sm text-accent-blue px-4 py-2"
-              >
+              <Button variant="ghost" onClick={cancelEdit}>
                 Cancelar
-              </button>
+              </Button>
             )}
           </div>
         </form>
-      </div>
+      </Card>
 
       {loading ? (
-        <p className="text-text-primary">Cargando...</p>
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <EmptyState icon={<Package className="h-6 w-6" />} message="No hay productos todavía." />
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full text-sm">
+        <Card className="overflow-x-auto">
+          <table className="w-full text-small">
             <thead>
-              <tr className="text-left text-text-primary border-b border-gray-200">
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Marca</th>
-                <th className="px-4 py-3">Categoría</th>
-                <th className="px-4 py-3">Precio</th>
-                <th className="px-4 py-3">Stock</th>
-                <th className="px-4 py-3">Acciones</th>
+              <tr className="border-b border-border bg-slate-50 text-left text-muted">
+                <th scope="col" className="px-4 py-3 font-semibold">Producto</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Marca</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Categoría</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Precio</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Stock</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="border-b border-gray-100 last:border-0">
-                  <td className="px-4 py-3 text-text-primary">{product.name}</td>
-                  <td className="px-4 py-3 text-text-primary">{product.brand}</td>
-                  <td className="px-4 py-3 text-text-primary">{product.category}</td>
-                  <td className="px-4 py-3 text-text-primary">{formatPrice(product.price)}</td>
-                  <td className="px-4 py-3 text-text-primary">{product.stock}</td>
+                <tr key={product.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => startEdit(product)}
-                      className="text-accent-blue text-sm mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product)}
-                      className="text-red-600 text-sm"
-                    >
-                      Eliminar
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <ProductImage
+                        src={product.imageUrl}
+                        alt={product.name}
+                        category={product.category}
+                        className="h-10 w-10 shrink-0 rounded-lg"
+                      />
+                      <span className="font-medium">{product.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">{product.brand}</td>
+                  <td className="px-4 py-3">{product.category}</td>
+                  <td className="px-4 py-3">{formatPrice(product.price)}</td>
+                  <td className="px-4 py-3">{product.stock}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => startEdit(product)}>
+                        Editar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(product)}
+                        className="!text-danger hover:!bg-red-50"
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   );

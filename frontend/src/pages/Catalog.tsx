@@ -1,8 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
+import { PackageSearch, ShoppingCart } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { addToCart } from "../lib/cart";
+import { formatPrice } from "../lib/format";
+import { STORE_NAME } from "../config";
+import ProductImage from "../components/ProductImage";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
+import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
+import Skeleton from "../components/ui/Skeleton";
+import { useToast } from "../components/ui/Toast";
 
 interface Product {
   id: string;
@@ -22,20 +34,26 @@ interface Filters {
 }
 
 const EMPTY_FILTERS: Filters = { category: "", brand: "", minPrice: "", maxPrice: "" };
+const LOW_STOCK_THRESHOLD = 5;
 
-function formatPrice(price: string) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [cartMessages, setCartMessages] = useState<Record<string, string>>({});
+  const toast = useToast();
+
+  // Catálogo completo (sin filtros) solo para generar las categorías y marcas disponibles.
+  useEffect(() => {
+    apiFetch("/products?take=200")
+      .then(setAllProducts)
+      .catch(() => setAllProducts([]));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -43,13 +61,27 @@ function Catalog() {
     if (filters.brand) params.set("brand", filters.brand);
     if (filters.minPrice) params.set("minPrice", filters.minPrice);
     if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+    params.set("take", "200");
 
     setLoading(true);
-    apiFetch(`/products${params.toString() ? `?${params.toString()}` : ""}`)
+    setError(null);
+    apiFetch(`/products?${params.toString()}`)
       .then((data) => setProducts(data))
-      .catch(() => setProducts([]))
+      .catch((err) => {
+        setProducts([]);
+        setError(err instanceof Error ? err.message : "No se pudo cargar el catálogo");
+      })
       .finally(() => setLoading(false));
   }, [filters]);
+
+  const categories = useMemo(
+    () => Array.from(new Set(allProducts.map((p) => p.category))).sort(),
+    [allProducts],
+  );
+  const brands = useMemo(
+    () => Array.from(new Set(allProducts.map((p) => p.brand))).sort(),
+    [allProducts],
+  );
 
   function updateFilter(key: keyof Filters, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -61,107 +93,162 @@ function Catalog() {
 
     try {
       await addToCart(product.id, 1);
-      setCartMessages((prev) => ({ ...prev, [product.id]: "Agregado ✅" }));
+      toast.success(`"${product.name}" se agregó al carrito`);
     } catch (err) {
-      setCartMessages((prev) => ({
-        ...prev,
-        [product.id]: err instanceof Error ? err.message : "Error al agregar",
-      }));
-    } finally {
-      setTimeout(() => {
-        setCartMessages((prev) => {
-          const next = { ...prev };
-          delete next[product.id];
-          return next;
-        });
-      }, 2000);
+      toast.error(err instanceof Error ? err.message : "No se pudo agregar al carrito");
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg-neutral px-4 py-6">
-      <h1 className="text-2xl font-semibold text-text-primary mb-4">Catálogo</h1>
+    <div>
+      <section className="mb-8 rounded-card bg-gradient-to-br from-accent-blue to-accent-blue-active px-6 py-10 text-white sm:px-10 sm:py-14">
+        <h1 className="text-title sm:text-4xl">Tecnología al mejor precio</h1>
+        <p className="mt-2 max-w-xl text-body text-blue-100">
+          Laptops, celulares, audio y más en {STORE_NAME}. Encuentra lo que necesitas y recíbelo
+          con seguimiento de tu pedido.
+        </p>
+      </section>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Categoría"
-          value={filters.category}
-          onChange={(e) => updateFilter("category", e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 text-sm"
-        />
-        <input
-          type="text"
-          placeholder="Marca"
-          value={filters.brand}
-          onChange={(e) => updateFilter("brand", e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          placeholder="Precio mínimo"
-          value={filters.minPrice}
-          onChange={(e) => updateFilter("minPrice", e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 text-sm w-36"
-        />
-        <input
-          type="number"
-          placeholder="Precio máximo"
-          value={filters.maxPrice}
-          onChange={(e) => updateFilter("maxPrice", e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 text-sm w-36"
-        />
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Categorías">
         <button
-          onClick={() => setFilters(EMPTY_FILTERS)}
-          className="text-sm text-accent-blue"
+          onClick={() => updateFilter("category", "")}
+          aria-pressed={filters.category === ""}
+          className={`rounded-full border px-4 py-1.5 text-small font-medium transition-colors ${
+            filters.category === ""
+              ? "border-accent-blue bg-accent-blue text-white"
+              : "border-border bg-surface text-text-primary hover:bg-slate-100"
+          }`}
         >
-          Limpiar filtros
+          Todas
         </button>
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => updateFilter("category", category)}
+            aria-pressed={filters.category === category}
+            className={`rounded-full border px-4 py-1.5 text-small font-medium transition-colors ${
+              filters.category === category
+                ? "border-accent-blue bg-accent-blue text-white"
+                : "border-border bg-surface text-text-primary hover:bg-slate-100"
+            }`}
+          >
+            {capitalize(category)}
+          </button>
+        ))}
       </div>
 
-      {loading && <p className="text-text-primary">Cargando...</p>}
+      <Card className="mb-6 grid grid-cols-2 items-end gap-3 p-4 md:grid-cols-5">
+        <Select
+          label="Marca"
+          value={filters.brand}
+          onChange={(e) => updateFilter("brand", e.target.value)}
+          className="col-span-2 md:col-span-1"
+        >
+          <option value="">Todas</option>
+          {brands.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </Select>
+        <Input
+          label="Precio mínimo"
+          type="number"
+          min="0"
+          value={filters.minPrice}
+          onChange={(e) => updateFilter("minPrice", e.target.value)}
+        />
+        <Input
+          label="Precio máximo"
+          type="number"
+          min="0"
+          value={filters.maxPrice}
+          onChange={(e) => updateFilter("maxPrice", e.target.value)}
+        />
+        <div className="col-span-2 md:col-span-2">
+          <Button variant="ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
+            Limpiar filtros
+          </Button>
+        </div>
+      </Card>
 
-      {!loading && products.length === 0 && (
-        <p className="text-text-primary">No se encontraron productos.</p>
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-small text-danger">
+          {error}
+        </p>
+      )}
+
+      {loading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="p-3">
+              <Skeleton className="aspect-square w-full" />
+              <Skeleton className="mt-3 h-4 w-1/3" />
+              <Skeleton className="mt-2 h-5 w-3/4" />
+              <Skeleton className="mt-2 h-5 w-1/2" />
+              <Skeleton className="mt-3 h-10 w-full" />
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && products.length === 0 && (
+        <EmptyState
+          icon={<PackageSearch className="h-6 w-6" />}
+          message="No se encontraron productos con esos filtros."
+          action={
+            <Button variant="primary" onClick={() => setFilters(EMPTY_FILTERS)}>
+              Limpiar filtros
+            </Button>
+          }
+        />
       )}
 
       {!loading && products.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white rounded-lg shadow p-3 flex flex-col hover:shadow-md transition-shadow"
-            >
-              <Link to={`/product/${product.id}`}>
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full aspect-square object-cover rounded mb-2"
-                />
-                <span className="text-text-primary font-medium block">{product.name}</span>
-                <span className="text-accent-blue font-semibold block mb-2">
-                  {formatPrice(product.price)}
-                </span>
-              </Link>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((product) => {
+            const soldOut = product.stock === 0;
+            const lowStock = !soldOut && product.stock <= LOW_STOCK_THRESHOLD;
 
-              {product.stock > 0 ? (
-                <button
+            return (
+              <Card key={product.id} hoverable className="flex flex-col p-3">
+                <Link to={`/product/${product.id}`} className="flex-1 rounded-lg">
+                  <div className="relative">
+                    <ProductImage
+                      src={product.imageUrl}
+                      alt={product.name}
+                      category={product.category}
+                      className={`aspect-square w-full rounded-lg ${soldOut ? "opacity-60" : ""}`}
+                    />
+                    {(soldOut || lowStock) && (
+                      <Badge
+                        variant={soldOut ? "danger" : "warning"}
+                        className="absolute left-2 top-2"
+                      >
+                        {soldOut ? "Agotado" : "Últimas unidades"}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted">
+                    {product.brand}
+                  </p>
+                  <p className="font-semibold text-text-primary">{product.name}</p>
+                  <p className="mb-3 mt-1 text-heading text-accent-blue">
+                    {formatPrice(product.price)}
+                  </p>
+                </Link>
+
+                <Button
+                  variant="cta"
+                  disabled={soldOut}
                   onClick={(e) => handleAddToCart(e, product)}
-                  className="bg-cta-green text-white rounded px-3 py-2 text-sm font-medium"
+                  icon={<ShoppingCart className="h-4 w-4" aria-hidden="true" />}
                 >
-                  Añadir al carrito
-                </button>
-              ) : (
-                <span className="text-red-600 text-sm">Sin stock</span>
-              )}
-
-              {cartMessages[product.id] && (
-                <span className="text-xs text-text-primary mt-1">
-                  {cartMessages[product.id]}
-                </span>
-              )}
-            </div>
-          ))}
+                  {soldOut ? "Agotado" : "Añadir al carrito"}
+                </Button>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

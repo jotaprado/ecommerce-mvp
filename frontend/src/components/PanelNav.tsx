@@ -2,9 +2,11 @@ import { Link, useLocation } from "react-router-dom";
 import { getCurrentUserRole } from "../lib/auth";
 
 function tabClass(active: boolean) {
-  return active
-    ? "px-3 py-2 text-sm font-medium border-b-2 border-cta-green text-text-primary"
-    : "px-3 py-2 text-sm font-medium border-b-2 border-transparent text-accent-blue";
+  return `px-4 py-2.5 text-small font-semibold border-b-2 transition-colors ${
+    active
+      ? "border-accent-blue text-accent-blue"
+      : "border-transparent text-muted hover:text-text-primary"
+  }`;
 }
 
 function PanelNav() {
@@ -12,7 +14,7 @@ function PanelNav() {
   const role = getCurrentUserRole();
 
   return (
-    <div className="flex gap-2 border-b border-gray-200 mb-6">
+    <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border" role="tablist">
       <Link to="/panel" className={tabClass(pathname === "/panel")}>
         Órdenes
       </Link>

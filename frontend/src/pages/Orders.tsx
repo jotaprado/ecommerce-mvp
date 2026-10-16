@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronRight, ClipboardList } from "lucide-react";
 import { apiFetch } from "../lib/api";
+import { formatDate, formatPrice } from "../lib/format";
+import OrderStatusBadge from "../components/OrderStatusBadge";
+import { buttonClasses } from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
+import Skeleton from "../components/ui/Skeleton";
 
 interface Order {
   id: string;
@@ -10,74 +17,69 @@ interface Order {
   createdAt: string;
 }
 
-function formatPrice(price: string) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(date),
-  );
-}
-
 function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch("/orders")
       .then(setOrders)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los pedidos"))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-neutral px-4 py-6">
-        <p className="text-text-primary">Cargando...</p>
-      </div>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <div className="min-h-screen bg-bg-neutral px-4 py-6">
-        <h1 className="text-2xl font-semibold text-text-primary mb-4">Mis pedidos</h1>
-        <p className="text-text-primary">
-          Todavía no tienes pedidos.{" "}
-          <Link to="/" className="text-accent-blue">
-            Ir al catálogo
-          </Link>
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-bg-neutral px-4 py-6">
-      <h1 className="text-2xl font-semibold text-text-primary mb-4">Mis pedidos</h1>
+    <div>
+      <h1 className="mb-6 text-title">Mis pedidos</h1>
 
-      <div className="space-y-3">
-        {orders.map((order) => (
-          <Link
-            key={order.id}
-            to={`/order/${order.id}`}
-            className="block bg-white rounded-lg shadow p-4 flex items-center justify-between"
-          >
-            <div>
-              <p className="text-text-primary font-medium font-mono">{order.trackingId}</p>
-              <p className="text-text-primary text-sm">{formatDate(order.createdAt)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-text-primary font-semibold">{formatPrice(order.total)}</p>
-              <p className="text-text-primary text-sm capitalize">{order.status}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {loading && (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-small text-danger">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && orders.length === 0 && (
+        <EmptyState
+          icon={<ClipboardList className="h-6 w-6" />}
+          message="Todavía no tienes pedidos."
+          action={
+            <Link to="/" className={buttonClasses("primary")}>
+              Ir al catálogo
+            </Link>
+          }
+        />
+      )}
+
+      {orders.length > 0 && (
+        <div className="space-y-3">
+          {orders.map((order) => (
+            <Link key={order.id} to={`/order/${order.id}`} className="block rounded-card">
+              <Card hoverable className="flex items-center justify-between gap-4 p-4">
+                <div>
+                  <p className="font-mono font-semibold">{order.trackingId}</p>
+                  <p className="text-small text-muted">{formatDate(order.createdAt)}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="font-semibold">{formatPrice(order.total)}</p>
+                    <OrderStatusBadge status={order.status} />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted" aria-hidden="true" />
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

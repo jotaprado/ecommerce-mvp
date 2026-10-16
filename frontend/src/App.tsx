@@ -1,4 +1,9 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { STORE_NAME } from "./config";
+import { ToastProvider } from "./components/ui/Toast";
+import Footer from "./components/Footer";
+import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import Catalog from "./pages/Catalog";
 import Login from "./pages/Login";
@@ -13,9 +18,16 @@ import ProductManager from "./pages/admin/ProductManager";
 import Dashboard from "./pages/admin/Dashboard";
 
 function App() {
+  useEffect(() => {
+    document.title = STORE_NAME;
+  }, []);
+
   return (
     <BrowserRouter>
+      <ToastProvider>
+      <div className="flex min-h-screen flex-col">
       <NavBar />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
       <Routes>
         <Route path="/" element={<Catalog />} />
         <Route path="/login" element={<Login />} />
@@ -48,7 +60,12 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      </main>
+      <Footer />
+      </div>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

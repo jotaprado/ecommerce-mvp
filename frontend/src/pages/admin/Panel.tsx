@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ClipboardList } from "lucide-react";
 import { apiFetch } from "../../lib/api";
+import { formatDate, formatPrice } from "../../lib/format";
 import PanelNav from "../../components/PanelNav";
+import Card from "../../components/ui/Card";
+import EmptyState from "../../components/ui/EmptyState";
+import Select from "../../components/ui/Select";
+import Skeleton from "../../components/ui/Skeleton";
+import { useToast } from "../../components/ui/Toast";
 
 const STATUSES = ["pending", "paid", "shipped", "delivered"];
 
@@ -14,30 +21,18 @@ interface Order {
   user?: { email: string };
 }
 
-function formatPrice(price: string) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(date),
-  );
-}
-
 function Panel() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const toast = useToast();
 
   function loadOrders() {
     setLoading(true);
     apiFetch("/orders")
       .then(setOrders)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar los pedidos"))
       .finally(() => setLoading(false));
   }
 
@@ -54,67 +49,78 @@ function Panel() {
         method: "PATCH",
         body: JSON.stringify({ status }),
       });
+      toast.success("Estado actualizado");
       loadOrders();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo actualizar el estado");
+      const message = err instanceof Error ? err.message : "No se pudo actualizar el estado";
+      setError(message);
+      toast.error(message);
     } finally {
       setUpdatingId(null);
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg-neutral px-4 py-6">
-      <h1 className="text-2xl font-semibold text-text-primary mb-4">Panel de administración</h1>
+    <div>
+      <h1 className="mb-4 text-title">Panel de administración</h1>
       <PanelNav />
 
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-small text-danger">
+          {error}
+        </p>
+      )}
 
       {loading ? (
-        <p className="text-text-primary">Cargando...</p>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
       ) : orders.length === 0 ? (
-        <p className="text-text-primary">No hay pedidos todavía.</p>
+        <EmptyState icon={<ClipboardList className="h-6 w-6" />} message="No hay pedidos todavía." />
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full text-sm">
+        <Card className="overflow-x-auto">
+          <table className="w-full text-small">
             <thead>
-              <tr className="text-left text-text-primary border-b border-gray-200">
-                <th className="px-4 py-3">Cliente</th>
-                <th className="px-4 py-3">Tracking ID</th>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Total</th>
-                <th className="px-4 py-3">Estado</th>
+              <tr className="border-b border-border bg-slate-50 text-left text-muted">
+                <th scope="col" className="px-4 py-3 font-semibold">Cliente</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Tracking ID</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Fecha</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Total</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Estado</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order.id} className="border-b border-gray-100 last:border-0">
-                  <td className="px-4 py-3 text-text-primary">{order.user?.email ?? "—"}</td>
-                  <td className="px-4 py-3 text-text-primary font-mono">
-                    <Link to={`/order/${order.id}`} className="text-accent-blue">
+                <tr key={order.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3">{order.user?.email ?? "—"}</td>
+                  <td className="px-4 py-3 font-mono">
+                    <Link to={`/order/${order.id}`} className="text-accent-blue hover:underline">
                       {order.trackingId ?? order.id.slice(0, 8)}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-text-primary">{formatDate(order.createdAt)}</td>
-                  <td className="px-4 py-3 text-text-primary">{formatPrice(order.total)}</td>
+                  <td className="px-4 py-3">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">
-                    <select
+                    <Select
+                      aria-label={`Estado del pedido ${order.trackingId ?? order.id}`}
                       value={order.status}
                       disabled={updatingId === order.id}
                       onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      className="border border-gray-300 rounded px-2 py-1 text-sm text-text-primary"
                     >
                       {STATUSES.map((status) => (
                         <option key={status} value={status}>
                           {status}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Card>
       )}
     </div>
   );

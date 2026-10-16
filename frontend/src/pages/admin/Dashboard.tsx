@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { DollarSign, ShoppingBag, Users } from "lucide-react";
 import { apiFetch } from "../../lib/api";
+import { formatPrice } from "../../lib/format";
 import PanelNav from "../../components/PanelNav";
+import Card from "../../components/ui/Card";
+import Skeleton from "../../components/ui/Skeleton";
 
 interface Summary {
   totalSales: string | number;
@@ -8,48 +13,69 @@ interface Summary {
   userCount: number;
 }
 
-function formatPrice(price: string | number) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
+function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string | number }) {
+  return (
+    <Card className="flex items-center gap-4 p-6">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-blue-soft text-accent-blue">
+        {icon}
+      </div>
+      <div>
+        <p className="text-small text-muted">{label}</p>
+        <p className="text-3xl font-bold">{value}</p>
+      </div>
+    </Card>
+  );
 }
 
 function Dashboard() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch("/admin/summary")
       .then(setSummary)
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudo cargar el resumen"))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg-neutral px-4 py-6">
-      <h1 className="text-2xl font-semibold text-text-primary mb-4">Panel de administración</h1>
+    <div>
+      <h1 className="mb-4 text-title">Panel de administración</h1>
       <PanelNav />
 
-      {loading || !summary ? (
-        <p className="text-text-primary">Cargando...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-text-primary mb-1">Ventas totales</p>
-            <p className="text-3xl font-semibold text-text-primary">
-              {formatPrice(summary.totalSales)}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-text-primary mb-1">Pedidos</p>
-            <p className="text-3xl font-semibold text-text-primary">{summary.orderCount}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-text-primary mb-1">Usuarios registrados</p>
-            <p className="text-3xl font-semibold text-text-primary">{summary.userCount}</p>
-          </div>
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-small text-danger">
+          {error}
+        </p>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
         </div>
+      ) : (
+        summary && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <StatCard
+              icon={<DollarSign className="h-6 w-6" />}
+              label="Ventas totales"
+              value={formatPrice(summary.totalSales)}
+            />
+            <StatCard
+              icon={<ShoppingBag className="h-6 w-6" />}
+              label="Pedidos"
+              value={summary.orderCount}
+            />
+            <StatCard
+              icon={<Users className="h-6 w-6" />}
+              label="Usuarios registrados"
+              value={summary.userCount}
+            />
+          </div>
+        )
       )}
     </div>
   );

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { CreditCard, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { getCart, notifyCartUpdated, removeFromCart, updateCartQuantity } from "../lib/cart";
 import type { CartLine } from "../lib/cart";
 import { apiFetch } from "../lib/api";
-
-function formatPrice(price: string) {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
-}
+import { formatPrice } from "../lib/format";
+import ProductImage from "../components/ProductImage";
+import Button, { buttonClasses } from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import EmptyState from "../components/ui/EmptyState";
+import Skeleton from "../components/ui/Skeleton";
+import { useToast } from "../components/ui/Toast";
 
 function Cart() {
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -18,11 +18,13 @@ function Cart() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   function loadCart() {
     setLoading(true);
     getCart()
       .then(setLines)
+      .catch((err) => toast.error(err instanceof Error ? err.message : "No se pudo cargar el carrito"))
       .finally(() => setLoading(false));
   }
 
@@ -31,13 +33,21 @@ function Cart() {
   }, []);
 
   async function handleQuantityChange(line: CartLine, quantity: number) {
-    await updateCartQuantity(line, quantity);
-    loadCart();
+    try {
+      await updateCartQuantity(line, quantity);
+      loadCart();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo actualizar la cantidad");
+    }
   }
 
   async function handleRemove(line: CartLine) {
-    await removeFromCart(line);
-    loadCart();
+    try {
+      await removeFromCart(line);
+      loadCart();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar el producto");
+    }
   }
 
   async function handleCheckout() {
@@ -49,7 +59,9 @@ function Cart() {
       notifyCartUpdated();
       navigate(`/order/${order.id}`);
     } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : "No se pudo completar el pago");
+      const message = err instanceof Error ? err.message : "No se pudo completar el pago";
+      setCheckoutError(message);
+      toast.error(message);
       setCheckingOut(false);
     }
   }
@@ -58,90 +70,113 @@ function Cart() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-neutral px-4 py-6">
-        <p className="text-text-primary">Cargando...</p>
+      <div>
+        <h1 className="mb-6 text-title">Carrito</h1>
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (lines.length === 0) {
     return (
-      <div className="min-h-screen bg-bg-neutral px-4 py-6">
-        <h1 className="text-2xl font-semibold text-text-primary mb-4">Carrito</h1>
-        <p className="text-text-primary">
-          Tu carrito está vacío.{" "}
-          <Link to="/" className="text-accent-blue">
-            Ir al catálogo
-          </Link>
-        </p>
+      <div>
+        <h1 className="mb-6 text-title">Carrito</h1>
+        <EmptyState
+          icon={<ShoppingCart className="h-6 w-6" />}
+          message="Tu carrito está vacío."
+          action={
+            <Link to="/" className={buttonClasses("primary")}>
+              Ir al catálogo
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-bg-neutral px-4 py-6">
-      <h1 className="text-2xl font-semibold text-text-primary mb-4">Carrito</h1>
+    <div>
+      <h1 className="mb-6 text-title">Carrito</h1>
 
-      <div className="space-y-3">
-        {lines.map((line) => (
-          <div
-            key={line.id}
-            className="bg-white rounded-lg shadow p-3 flex items-center gap-4"
-          >
-            <img
-              src={line.product.imageUrl}
-              alt={line.product.name}
-              className="w-20 h-20 object-cover rounded"
-            />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-3 lg:col-span-2">
+          {lines.map((line) => (
+            <Card key={line.id} className="flex flex-wrap items-center gap-4 p-3 sm:flex-nowrap">
+              <ProductImage
+                src={line.product.imageUrl}
+                alt={line.product.name}
+                className="h-20 w-20 shrink-0 rounded-lg"
+              />
 
-            <div className="flex-1">
-              <p className="text-text-primary font-medium">{line.product.name}</p>
-              <p className="text-text-primary text-sm">{formatPrice(line.product.price)}</p>
-            </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">{line.product.name}</p>
+                <p className="text-small text-muted">{formatPrice(line.product.price)}</p>
+              </div>
 
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" role="group" aria-label="Cantidad">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Disminuir cantidad"
+                  onClick={() => handleQuantityChange(line, line.quantity - 1)}
+                  className="border border-border"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-6 text-center font-semibold">{line.quantity}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Aumentar cantidad"
+                  onClick={() => handleQuantityChange(line, line.quantity + 1)}
+                  className="border border-border"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <p className="w-28 text-right font-semibold">
+                {formatPrice(Number(line.product.price) * line.quantity)}
+              </p>
+
               <button
-                onClick={() => handleQuantityChange(line, line.quantity - 1)}
-                className="w-8 h-8 border border-gray-300 rounded text-text-primary"
+                onClick={() => handleRemove(line)}
+                aria-label={`Eliminar ${line.product.name}`}
+                className="rounded-lg p-2 text-danger hover:bg-red-50"
               >
-                −
+                <Trash2 className="h-5 w-5" />
               </button>
-              <span className="w-6 text-center text-text-primary">{line.quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(line, line.quantity + 1)}
-                className="w-8 h-8 border border-gray-300 rounded text-text-primary"
-              >
-                +
-              </button>
-            </div>
+            </Card>
+          ))}
+        </div>
 
-            <p className="w-28 text-right text-text-primary font-medium">
-              {formatPrice(String(Number(line.product.price) * line.quantity))}
-            </p>
-
-            <button
-              onClick={() => handleRemove(line)}
-              className="text-red-600 text-sm"
-            >
-              Eliminar
-            </button>
+        <Card className="h-fit p-5">
+          <h2 className="mb-4 text-heading">Resumen</h2>
+          <div className="mb-4 flex items-center justify-between border-t border-border pt-4">
+            <span className="text-body font-semibold">Total</span>
+            <span className="text-heading">{formatPrice(total)}</span>
           </div>
-        ))}
-      </div>
 
-      {checkoutError && <p className="text-red-600 text-sm mt-4">{checkoutError}</p>}
+          {checkoutError && (
+            <p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-small text-danger">
+              {checkoutError}
+            </p>
+          )}
 
-      <div className="mt-6 flex items-center justify-between bg-white rounded-lg shadow p-4">
-        <span className="text-lg font-semibold text-text-primary">
-          Total: {formatPrice(String(total))}
-        </span>
-        <button
-          onClick={handleCheckout}
-          disabled={checkingOut}
-          className="bg-cta-green text-white rounded px-4 py-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {checkingOut ? "Procesando..." : "Ir a pagar"}
-        </button>
+          <Button
+            variant="cta"
+            loading={checkingOut}
+            onClick={handleCheckout}
+            className="w-full"
+            icon={<CreditCard className="h-4 w-4" aria-hidden="true" />}
+          >
+            {checkingOut ? "Procesando..." : "Ir a pagar"}
+          </Button>
+        </Card>
       </div>
     </div>
   );
