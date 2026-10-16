@@ -12,8 +12,8 @@ Tienda en línea de tecnología (laptops, celulares, audio, monitores, periféri
 
 | Pieza | URL de producción |
 |---|---|
-| Frontend (Vercel) | _Completar: la URL real no está en el repositorio_ |
-| Backend / API (Render) | _Completar: la URL real no está en el repositorio_ |
+| Frontend (Vercel) | https://ecommerce-mvp-kappa.vercel.app |
+| Backend / API (Render) | https://ecommerce-mvp-5uu3.onrender.com (estado del servicio: `/api/health`) |
 | Base de datos (Neon) | Una sola base de datos, **compartida entre desarrollo local y producción** |
 
 ## 2. Stack y estructura
