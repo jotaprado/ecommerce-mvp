@@ -121,7 +121,7 @@ function ProductDetail() {
 
           <p className="text-3xl font-bold text-accent-blue">{formatPrice(product.price)}</p>
 
-          {soldOut && <Badge variant="danger" className="w-fit">Agotado</Badge>}
+          {soldOut && <Badge variant="neutral" className="w-fit">Agotado</Badge>}
           {lowStock && <Badge variant="danger" className="w-fit">Últimas unidades ({product.stock})</Badge>}
 
           <p className="text-body text-muted">{product.description}</p>

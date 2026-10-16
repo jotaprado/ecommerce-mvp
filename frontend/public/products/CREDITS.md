@@ -1,6 +1,6 @@
 # Créditos de imágenes de producto
 
-Todas provienen de Wikimedia Commons (licencias libres). Se redimensionaron a 800 px de ancho y se recomprimieron; no se hicieron otros cambios. Varias son fotos referenciales del mismo fabricante o línea, indicadas en la columna *Nota*.
+Todas provienen de Wikimedia Commons (licencias libres). Se redimensionaron a 800 px de ancho y se recomprimieron; no se hicieron otros cambios. Varias son fotos de un modelo referencial (del mismo fabricante o línea), indicadas en la columna *Nota*. Los 23 productos tienen imagen.
 
 | Archivo | Origen | Autor | Licencia | Nota |
 |---|---|---|---|---|
@@ -23,12 +23,7 @@ Todas provienen de Wikimedia Commons (licencias libres). Se redimensionaron a 80
 | ssd-nvme-1tb.jpg | [Samsung 980 PRO PCIe 4.0 NVMe SSD 1TB-top PNr°0915.jpg](https://commons.wikimedia.org/wiki/File:Samsung_980_PRO_PCIe_4.0_NVMe_SSD_1TB-top_PNr%C2%B00915.jpg) | D-Kuru | CC BY-SA 4.0 | Foto del Samsung 980 PRO 1TB. |
 | ram-16gb-ddr4.jpg | [RAM Module (SDRAM-DDR4).jpg](https://commons.wikimedia.org/wiki/File:RAM_Module_(SDRAM-DDR4).jpg) | ElooKoN | CC BY-SA 4.0 | Imagen referencial de un módulo DDR4 (G.Skill Ripjaws V). |
 | galaxy-watch-6.jpg | [Samsung Galaxy Watch 6 3.jpg](https://commons.wikimedia.org/wiki/File:Samsung_Galaxy_Watch_6_3.jpg) | Ganesh Mohan T | CC BY-SA 4.0 | Foto del Samsung Galaxy Watch 6. |
-
-## Sin imagen (usan el respaldo por categoría)
-
-- redmi-note-13 (Xiaomi Redmi Note 13)
-- apple-watch-series-9 (Apple Watch Series 9)
-- lg-ultragear-27 (LG UltraGear 27'')
-- odyssey-g5 (Samsung Odyssey G5 32'')
-
-No se encontró en Commons una foto con licencia libre y calidad suficiente del modelo correcto.
+| redmi-note-13.jpg | [Redmi Note 12 back.jpg](https://commons.wikimedia.org/wiki/File:Redmi_Note_12_back.jpg) | Maksdroider | CC BY-SA 4.0 | Foto del Xiaomi Redmi Note 12 (modelo hermano; modelo referencial). |
+| apple-watch-series-9.jpg | [Apple Watch Series 8.jpg](https://commons.wikimedia.org/wiki/File:Apple_Watch_Series_8.jpg) | iGeeksBlog | CC BY-SA 4.0 | Foto del Apple Watch Series 8 (modelo hermano; modelo referencial). |
+| odyssey-g5.jpg | [Samsung LC27F591FDEXZW front 20191229.jpg](https://commons.wikimedia.org/wiki/File:Samsung_LC27F591FDEXZW_front_20191229.jpg) | Solomon203 | CC BY-SA 4.0 | Foto del Samsung LC27F591 (monitor curvo gamer de 27''; modelo referencial). |
+| lg-ultragear-27.jpg | [LG 울트라기어 앞세워 게이밍 모니터 수요 잡는다 - 50396067637.jpg](https://commons.wikimedia.org/wiki/File:LG_%EC%9A%B8%ED%8A%B8%EB%9D%BC%EA%B8%B0%EC%96%B4_%EC%95%9E%EC%84%B8%EC%9B%8C_%EA%B2%8C%EC%9D%B4%EB%B0%8D_%EB%AA%A8%EB%8B%88%ED%84%B0_%EC%88%98%EC%9A%94_%EC%9E%A1%EB%8A%94%EB%8B%A4_-_50396067637.jpg) | LGEPR | CC BY 2.0 | Imagen promocional de monitores LG UltraGear (modelo referencial). |

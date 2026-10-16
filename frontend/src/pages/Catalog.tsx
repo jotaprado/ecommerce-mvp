@@ -222,7 +222,7 @@ function Catalog() {
                     />
                     {(soldOut || lowStock) && (
                       <Badge
-                        variant="danger"
+                        variant={soldOut ? "neutral" : "danger"}
                         className="absolute left-2 top-2"
                       >
                         {soldOut ? "Agotado" : "Últimas unidades"}

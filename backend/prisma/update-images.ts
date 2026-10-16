@@ -11,13 +11,13 @@ const IMAGES: Record<string, string> = {
   "Laptop Gamer ROG Strix": "/products/rog-strix.jpg",
   "iPhone 15": "/products/iphone-15.jpg",
   "Samsung Galaxy S24": "/products/galaxy-s24.jpg",
-  "Xiaomi Redmi Note 13": "", // sin foto libre disponible: la tienda muestra el respaldo por categoría
+  "Xiaomi Redmi Note 13": "/products/redmi-note-13.jpg",
   "Motorola Edge 40": "/products/motorola-edge-40.jpg",
   "Audífonos WH-1000XM5": "/products/sony-wh-1000xm5.jpg",
   "AirPods Pro 2": "/products/airpods-pro-2.jpg",
   "Audífonos JBL Tune 510BT": "/products/jbl-tune-510bt.jpg",
-  "Monitor UltraGear 27'' 144Hz": "", // sin foto libre disponible: la tienda muestra el respaldo por categoría
-  "Monitor Odyssey G5 32''": "", // sin foto libre disponible: la tienda muestra el respaldo por categoría
+  "Monitor UltraGear 27'' 144Hz": "/products/lg-ultragear-27.jpg",
+  "Monitor Odyssey G5 32''": "/products/odyssey-g5.jpg",
   "Monitor ProArt 24''": "/products/proart-24.jpg",
   "Teclado Mecánico K95 RGB": "/products/corsair-k95.jpg",
   "Mouse MX Master 3S": "/products/mx-master-3s.jpg",
@@ -26,7 +26,7 @@ const IMAGES: Record<string, string> = {
   "Tablet Galaxy Tab S9": "/products/galaxy-tab-s9.jpg",
   "SSD NVMe 1TB": "/products/ssd-nvme-1tb.jpg",
   "Memoria RAM 16GB DDR4": "/products/ram-16gb-ddr4.jpg",
-  "Smartwatch Watch Series 9": "", // sin foto libre disponible: la tienda muestra el respaldo por categoría
+  "Smartwatch Watch Series 9": "/products/apple-watch-series-9.jpg",
   "Smartwatch Galaxy Watch 6": "/products/galaxy-watch-6.jpg",
 };
 
