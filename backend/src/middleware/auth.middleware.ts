@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { prisma } from "../lib/prisma";
 
 export interface AuthUser {
   id: string;
@@ -14,7 +15,7 @@ declare global {
   }
 }
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith("Bearer ")) {
@@ -23,11 +24,33 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 
   const token = header.slice("Bearer ".length);
 
+  let payload: { id?: unknown };
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as AuthUser;
-    req.user = { id: payload.id, role: payload.role };
-    next();
+    payload = jwt.verify(token, process.env.JWT_SECRET as string) as { id?: unknown };
   } catch {
     return res.status(401).json({ error: "Token inválido o expirado" });
+  }
+
+  if (typeof payload.id !== "string") {
+    return res.status(401).json({ error: "Token inválido o expirado" });
+  }
+
+  try {
+    // El rol y el estado se leen de la BD (no del token): los cambios de rol y las
+    // desactivaciones aplican al instante, incluso con tokens ya emitidos.
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id },
+      select: { id: true, role: true, active: true },
+    });
+
+    if (!user || !user.active) {
+      return res.status(401).json({ error: "Cuenta desactivada o inexistente" });
+    }
+
+    req.user = { id: user.id, role: user.role };
+    next();
+  } catch (error) {
+    console.error("Error en authMiddleware:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 }

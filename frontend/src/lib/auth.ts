@@ -12,15 +12,24 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-export function getCurrentUserRole(): string | null {
+function decodeToken(): { id?: string; role?: string } | null {
   const token = getToken();
   if (!token) return null;
 
   try {
-    const payload = token.split(".")[1];
-    const decoded = JSON.parse(atob(payload));
-    return decoded.role ?? null;
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(payload));
   } catch {
     return null;
   }
 }
+
+export function getCurrentUserRole(): string | null {
+  return decodeToken()?.role ?? null;
+}
+
+export function getCurrentUserId(): string | null {
+  return decodeToken()?.id ?? null;
+}
+
+export const AUTH_NOTICE_KEY = "auth_notice";

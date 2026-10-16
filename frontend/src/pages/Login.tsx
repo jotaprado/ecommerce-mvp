@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { saveToken } from "../lib/auth";
+import { AUTH_NOTICE_KEY, saveToken } from "../lib/auth";
 import { getGuestCart, clearGuestCart } from "../lib/guestCart";
 import { notifyCartUpdated } from "../lib/cart";
 import Button from "../components/ui/Button";
@@ -13,7 +13,15 @@ import { useToast } from "../components/ui/Toast";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    try {
+      const notice = sessionStorage.getItem(AUTH_NOTICE_KEY);
+      sessionStorage.removeItem(AUTH_NOTICE_KEY);
+      return notice;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();

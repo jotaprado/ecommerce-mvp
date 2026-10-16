@@ -16,6 +16,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Panel from "./pages/admin/Panel";
 import ProductManager from "./pages/admin/ProductManager";
 import Dashboard from "./pages/admin/Dashboard";
+import Users from "./pages/admin/Users";
 
 function App() {
   useEffect(() => {
@@ -49,6 +50,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProductManager />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/panel/users"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Users />
             </ProtectedRoute>
           }
         />

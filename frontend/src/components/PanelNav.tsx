@@ -23,6 +23,9 @@ function PanelNav() {
           <Link to="/panel/products" className={tabClass(pathname === "/panel/products")}>
             Productos
           </Link>
+          <Link to="/panel/users" className={tabClass(pathname === "/panel/users")}>
+            Usuarios
+          </Link>
           <Link to="/panel/dashboard" className={tabClass(pathname === "/panel/dashboard")}>
             Dashboard
           </Link>
