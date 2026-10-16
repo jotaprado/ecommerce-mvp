@@ -83,6 +83,9 @@ function NavBar() {
           <NavLink to="/" end className={linkClass}>
             Catálogo
           </NavLink>
+          <NavLink to="/seguimiento" className={linkClass}>
+            Rastrear pedido
+          </NavLink>
           {loggedIn && (
             <NavLink to="/orders" className={linkClass}>
               Mis pedidos
@@ -187,6 +190,9 @@ function NavBar() {
           <div className="flex flex-col gap-1">
             <NavLink to="/" end className={linkClass}>
               Catálogo
+            </NavLink>
+            <NavLink to="/seguimiento" className={linkClass}>
+              Rastrear pedido
             </NavLink>
             {loggedIn ? (
               <>

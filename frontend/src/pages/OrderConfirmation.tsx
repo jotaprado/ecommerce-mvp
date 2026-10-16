@@ -94,7 +94,13 @@ function OrderConfirmation() {
               <p className="mt-1 text-small font-medium text-text-primary">{orderStatusLabel(order.status)}</p>
             )}
             <p className="mt-2 text-small text-muted">Número de seguimiento</p>
-            <p className="font-mono text-heading">{order.trackingId}</p>
+            <Link
+              to={`/seguimiento/${order.trackingId}`}
+              className="font-mono text-heading text-accent-blue underline-offset-2 hover:underline"
+              title="Ver el seguimiento público de este pedido"
+            >
+              {order.trackingId}
+            </Link>
             <div className="mt-2">
               <OrderStatusBadge status={order.status} />
             </div>

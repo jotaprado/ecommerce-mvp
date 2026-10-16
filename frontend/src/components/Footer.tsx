@@ -13,6 +13,9 @@ function Footer() {
           <Link to="/" className="text-accent-blue hover:underline">
             Catálogo
           </Link>
+          <Link to="/seguimiento" className="text-accent-blue hover:underline">
+            Rastrear pedido
+          </Link>
           <Link to="/orders" className="text-accent-blue hover:underline">
             Mis pedidos
           </Link>

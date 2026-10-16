@@ -5,6 +5,8 @@ import { ToastProvider } from "./components/ui/Toast";
 import Footer from "./components/Footer";
 import NotFound from "./pages/NotFound";
 import Checkout from "./pages/Checkout";
+import TrackingSearch from "./pages/TrackingSearch";
+import TrackingResult from "./pages/TrackingResult";
 import RequireAuth from "./components/RequireAuth";
 import NavBar from "./components/NavBar";
 import Catalog from "./pages/Catalog";
@@ -45,6 +47,8 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route path="/seguimiento" element={<TrackingSearch />} />
+        <Route path="/seguimiento/:trackingId" element={<TrackingResult />} />
         <Route path="/order/:id" element={<OrderConfirmation />} />
         <Route path="/orders" element={<Orders />} />
         <Route

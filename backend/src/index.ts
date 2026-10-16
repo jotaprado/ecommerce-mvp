@@ -9,6 +9,7 @@ import { orderRouter } from "./routes/order.route";
 import { userRouter } from "./routes/user.route";
 import { adminRouter } from "./routes/admin.route";
 import { checkoutRouter } from "./routes/checkout.route";
+import { trackingRouter } from "./routes/tracking.route";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -29,6 +30,7 @@ app.use("/api/orders", orderRouter);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/checkout", checkoutRouter);
+app.use("/api/tracking", trackingRouter);
 
 // Siempre al final: captura los errores que lleguen por next(error).
 app.use(errorHandler);

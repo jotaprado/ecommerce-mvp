@@ -66,25 +66,33 @@ function Orders() {
       {orders.length > 0 && (
         <div className="space-y-3">
           {orders.map((order) => (
-            <Link key={order.id} to={`/order/${order.id}`} className="block rounded-card">
-              <Card hoverable className="flex items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-mono font-semibold">{order.trackingId}</p>
-                  <p className="text-small text-muted">{formatDate(order.createdAt)}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Badge variant="neutral">{deliveryLabel(order.deliveryType)}</Badge>
-                    <Badge variant="neutral">{paymentLabel(order.payment, order.deliveryType)}</Badge>
-                  </div>
+            <Card key={order.id} hoverable className="flex items-center justify-between gap-4 p-4">
+              <div>
+                <Link
+                  to={`/seguimiento/${order.trackingId}`}
+                  title="Ver el seguimiento de este pedido"
+                  className="font-mono font-semibold text-accent-blue hover:underline"
+                >
+                  {order.trackingId}
+                </Link>
+                <p className="text-small text-muted">{formatDate(order.createdAt)}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Badge variant="neutral">{deliveryLabel(order.deliveryType)}</Badge>
+                  <Badge variant="neutral">{paymentLabel(order.payment, order.deliveryType)}</Badge>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="font-semibold">{formatPrice(order.total)}</p>
-                    <OrderStatusBadge status={order.status} />
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted" aria-hidden="true" />
+              </div>
+              <Link
+                to={`/order/${order.id}`}
+                aria-label={`Ver detalle del pedido ${order.trackingId}`}
+                className="flex items-center gap-4 rounded-lg"
+              >
+                <div className="text-right">
+                  <p className="font-semibold">{formatPrice(order.total)}</p>
+                  <OrderStatusBadge status={order.status} />
                 </div>
-              </Card>
-            </Link>
+                <ChevronRight className="h-5 w-5 text-muted" aria-hidden="true" />
+              </Link>
+            </Card>
           ))}
         </div>
       )}
