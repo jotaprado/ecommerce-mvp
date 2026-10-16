@@ -14,75 +14,94 @@ function generateTrackingId(): string {
   return `TRK-${id}`;
 }
 
+class CheckoutError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export async function checkout(req: Request, res: Response) {
-  const userId = req.user!.id;
+  try {
+    const userId = req.user!.id;
 
-  const cartItems = await prisma.cartItem.findMany({
-    where: { userId },
-    include: { product: true },
-  });
-
-  if (cartItems.length === 0) {
-    return res.status(400).json({ error: "El carrito está vacío" });
-  }
-
-  for (const item of cartItems) {
-    if (item.product.stock < item.quantity) {
-      return res.status(400).json({
-        error: `Stock insuficiente para "${item.product.name}" (disponible: ${item.product.stock}, solicitado: ${item.quantity})`,
-      });
-    }
-  }
-
-  const total = cartItems.reduce(
-    (sum, item) => sum + Number(item.product.price) * item.quantity,
-    0,
-  );
-
-  const payment = await processPayment(total);
-
-  if (!payment.approved) {
-    return res.status(400).json({ error: "El pago fue rechazado" });
-  }
-
-  const order = await prisma.$transaction(async (tx) => {
-    const newOrder = await tx.order.create({
-      data: {
-        userId,
-        status: "paid",
-        total,
-        trackingId: generateTrackingId(),
-        items: {
-          create: cartItems.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.product.price,
-          })),
-        },
-        payment: {
-          create: {
-            gatewayReference: payment.reference,
-            status: "approved",
-            amount: total,
-          },
-        },
-      },
-      include: { items: { include: { product: true } }, payment: true },
+    const cartItems = await prisma.cartItem.findMany({
+      where: { userId },
+      include: { product: true },
     });
 
-    for (const item of cartItems) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
-      });
+    if (cartItems.length === 0) {
+      return res.status(400).json({ error: "El carrito está vacío" });
     }
 
-    await tx.cartItem.deleteMany({ where: { userId } });
+    // Validación previa: si algún item no tiene stock, se responde sin abrir la transacción.
+    for (const item of cartItems) {
+      if (item.product.stock < item.quantity) {
+        return res.status(400).json({
+          error: `Stock insuficiente para "${item.product.name}" (disponible: ${item.product.stock}, solicitado: ${item.quantity})`,
+        });
+      }
+    }
 
-    return newOrder;
-  });
+    // El precio y el total salen siempre de la base de datos, nunca del body.
+    const total = cartItems.reduce(
+      (sum, item) => sum + Number(item.product.price) * item.quantity,
+      0,
+    );
 
-  res.status(201).json(order);
+    const order = await prisma.$transaction(async (tx) => {
+      // Descuento atómico: la condición stock >= cantidad evita stock negativo ante compras simultáneas.
+      for (const item of cartItems) {
+        const updated = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (updated.count === 0) {
+          throw new CheckoutError(`Stock insuficiente para "${item.product.name}"`);
+        }
+      }
+
+      const payment = await processPayment(total);
+      if (!payment.approved) {
+        throw new CheckoutError("El pago fue rechazado");
+      }
+
+      const newOrder = await tx.order.create({
+        data: {
+          userId,
+          status: "paid",
+          total,
+          trackingId: generateTrackingId(),
+          items: {
+            create: cartItems.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.product.price,
+            })),
+          },
+          payment: {
+            create: {
+              gatewayReference: payment.reference,
+              status: "approved",
+              amount: total,
+            },
+          },
+        },
+        include: { items: { include: { product: true } }, payment: true },
+      });
+
+      await tx.cartItem.deleteMany({ where: { userId } });
+
+      return newOrder;
+    });
+
+    res.status(201).json(order);
+  } catch (error) {
+    if (error instanceof CheckoutError) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Error en checkout:", error);
+    res.status(500).json({ error: "Error al procesar la orden" });
+  }
 }
 
 export async function listOrders(req: Request, res: Response) {
