@@ -127,7 +127,7 @@ function TrackingResult() {
               <ul className="space-y-1">
                 {tracking.items.map((item, i) => (
                   <li key={i}>
-                    {item.name} <span className="text-muted">× {item.quantity}</span>
+                    {item.name} <span className="whitespace-nowrap text-muted">× {item.quantity}</span>
                   </li>
                 ))}
               </ul>

@@ -21,13 +21,13 @@ interface Summary {
 
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string | number }) {
   return (
-    <Card className="flex items-center gap-4 p-6">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-blue-soft text-accent-blue">
+    <Card className="flex items-center gap-3 p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-blue-soft text-accent-blue">
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-small text-muted">{label}</p>
-        <p className="truncate text-3xl font-bold">{value}</p>
+        <p className="whitespace-nowrap text-2xl font-bold">{value}</p>
       </div>
     </Card>
   );
@@ -35,9 +35,10 @@ function StatCard({ icon, label, value }: { icon: ReactNode; label: string; valu
 
 function formatDay(key: string) {
   // Mediodía para evitar que la zona horaria del navegador mueva el día.
-  return new Intl.DateTimeFormat("es-CO", { weekday: "short", day: "numeric", month: "short" }).format(
+  const text = new Intl.DateTimeFormat("es-CO", { weekday: "short", day: "numeric", month: "short" }).format(
     new Date(`${key}T12:00:00`),
   );
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function Dashboard() {
@@ -76,10 +77,10 @@ function Dashboard() {
         summary && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard icon={<DollarSign className="h-6 w-6" />} label="Ventas totales" value={formatPrice(summary.totalSales)} />
-              <StatCard icon={<ShoppingBag className="h-6 w-6" />} label="Pedidos" value={summary.orderCount} />
-              <StatCard icon={<Clock className="h-6 w-6" />} label="Pendientes de pago" value={summary.pendingOrders} />
-              <StatCard icon={<Users className="h-6 w-6" />} label="Usuarios registrados" value={summary.userCount} />
+              <StatCard icon={<DollarSign className="h-5 w-5" />} label="Ventas totales" value={formatPrice(summary.totalSales)} />
+              <StatCard icon={<ShoppingBag className="h-5 w-5" />} label="Pedidos" value={summary.orderCount} />
+              <StatCard icon={<Clock className="h-5 w-5" />} label="Pendientes de pago" value={summary.pendingOrders} />
+              <StatCard icon={<Users className="h-5 w-5" />} label="Usuarios registrados" value={summary.userCount} />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -158,7 +159,7 @@ function Dashboard() {
                 <tbody>
                   {summary.salesLast7Days.map((day) => (
                     <tr key={day.date} className="border-b border-border last:border-0">
-                      <td className="whitespace-nowrap py-2 pr-3 capitalize">{formatDay(day.date)}</td>
+                      <td className="whitespace-nowrap py-2 pr-3">{formatDay(day.date)}</td>
                       <td className="hidden py-2 pr-3 sm:table-cell">
                         <div className="h-2.5 w-full rounded-full bg-slate-100">
                           <div
